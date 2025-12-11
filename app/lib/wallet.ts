@@ -1,57 +1,40 @@
-"use server";
-
 import { supabaseServer } from "./supabase-server";
 
-export async function recordPhiTransaction(
-  userId: string,
-  amount: number,
-  type: string
-) {
+export async function addWalletBalance(userId: string, amount: number) {
   const supabase = supabaseServer();
 
-  // 1. Insert transaction log
-  const { error: insertError } = await supabase
-    .from("phi_transactions")
-    .insert({
-      user_id: userId,
-      amount,
-      type,
-    });
-
-  if (insertError) {
-    console.error("Transaction insert error:", insertError);
-    throw new Error("Failed to log PHI transaction");
-  }
-
-  // 2. Update balance in profiles
-  const { error: updateError } = await supabase
+  const { error } = await supabase
     .from("profiles")
     .update({
-      phi: supabase.rpc("increment", { x: amount }),
+      wallet_balance: supabase.rpc("increment", { x: amount })
     })
     .eq("id", userId);
 
-  if (updateError) {
-    console.error("PHI update error:", updateError);
-    throw new Error("Failed to update PHI balance");
-  }
-
+  if (error) return { error };
   return { success: true };
 }
 
-export async function getPhiHistory(userId: string) {
+export async function withdrawWalletBalance(userId: string, amount: number) {
   const supabase = supabaseServer();
 
-  const { data, error } = await supabase
-    .from("phi_transactions")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+  // Check balance first
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("wallet_balance")
+    .eq("id", userId)
+    .single();
 
-  if (error) {
-    console.error("Fetch PHI history error:", error);
-    return [];
+  if (!profile || profile.wallet_balance < amount) {
+    return { error: "Insufficient balance" };
   }
 
-  return data;
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      wallet_balance: supabase.rpc("decrement", { x: amount })
+    })
+    .eq("id", userId);
+
+  if (error) return { error };
+  return { success: true };
 }

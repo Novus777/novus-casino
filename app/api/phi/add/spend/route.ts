@@ -1,29 +1,19 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/app/lib/supabase-server";
+import { spendPhi } from "@/app/lib/phi";
 
 export async function POST(req: Request) {
   try {
-    const { userId, amount } = await req.json();
-    const supabase = supabaseServer();
+    const { userId, amount, reason } = await req.json();
 
-    if (!userId || !amount)
+    if (!userId || !amount) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
 
-    // Insert PHI spend transaction
-    await supabase.from("phi_transactions").insert({
-      user_id: userId,
-      amount: -amount,
-      type: "spend",
-    });
+    const result = await spendPhi(userId, amount, reason || "spend");
 
-    // decrease PHI
-    await supabase
-      .from("profiles")
-      .update({ phi: supabase.rpc("decrement", { x: amount }) })
-      .eq("id", userId);
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ error }, { status: 500 });
+    console.error("Error in /phi/add/spend:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

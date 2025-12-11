@@ -1,38 +1,13 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/app/lib/supabase-server";
-import { updateVipLevel } from "@/app/lib/vip";
+import { addXP } from "@/app/lib/xp";  // <-- FIXED IMPORT
 
 export async function POST(req: Request) {
-  try {
-    const { userId, amount } = await req.json();
-    const supabase = supabaseServer();
+  const { userId, amount } = await req.json();
 
-    if (!userId || !amount)
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-
-    // Add XP transaction
-    await supabase.from("xp_transactions").insert({
-      user_id: userId,
-      amount,
-      type: "gain",
-    });
-
-    // Update XP in profile
-    await supabase
-      .from("profiles")
-      .update({
-        xp: supabase.rpc("increment", { x: amount }),
-      })
-      .eq("id", userId);
-
-    // Recalculate VIP level
-    const newVip = await updateVipLevel(userId);
-
-    return NextResponse.json({
-      success: true,
-      newVipLevel: newVip,
-    });
-  } catch (err) {
-    return NextResponse.json({ error: err }, { status: 500 });
+  if (!userId || !amount) {
+    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
+
+  const result = await addXP(userId, amount);   // <-- FIXED FUNCTION CALL
+  return NextResponse.json(result);
 }
