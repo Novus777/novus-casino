@@ -1,46 +1,24 @@
-import { supabaseServer } from "./supabase-server";
-import { updateVipLevel } from "./vip";
+import { supabaseServer } from "@/app/lib/supabase-server";
+import { updateVipLevel } from "@/app/lib/vip";
 
 export async function claimDailyReward(userId: string) {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
 
-  const { data: last } = await supabase
-    .from("daily_rewards")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
+  // get profile
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("xp")
+    .eq("id", userId)
     .single();
 
-  const now = new Date();
-  const lastDate = last ? new Date(last.created_at) : null;
-
-  let streak = last?.streak ?? 0;
-  const oneDay = 24 * 60 * 60 * 1000;
-
-  if (lastDate && now.getTime() - lastDate.getTime() < oneDay * 1.5) {
-    streak++;
-  } else {
-    streak = 1;
-  }
-
-  const reward = 100 + streak * 10;
-
-  await supabase.from("daily_rewards").insert({
-    user_id: userId,
-    streak,
-    amount: reward,
-  });
+  const newXp = (profile?.xp || 0) + 10;
 
   await supabase
     .from("profiles")
-    .update({
-      phi: supabase.rpc("increment", { x: reward }),
-      xp: supabase.rpc("increment", { x: 50 }),
-    })
+    .update({ xp: newXp })
     .eq("id", userId);
 
-  await updateVipLevel(userId);
+  await updateVipLevel(userId, newXp);
 
-  return { reward, streak };
+  return { xp: newXp };
 }

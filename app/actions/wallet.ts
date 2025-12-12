@@ -1,36 +1,16 @@
 "use server";
 
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { supabaseServer } from "@/app/lib/supabase-server";
 
-export async function getWallet() {
-  const cookieStore = await cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) return null;
+export async function getWallet(userId: string) {
+  const supabase = await supabaseServer();
 
   const { data, error } = await supabase
     .from("wallets")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .single();
 
-  if (error) return null;
-
+  if (error) throw error;
   return data;
 }

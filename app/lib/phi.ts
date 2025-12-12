@@ -1,71 +1,45 @@
-// app/lib/phi.ts
 import { supabaseServer } from "./supabase-server";
 
-/**
- * Log a PHI transaction
- */
-export async function logPhiTransaction(
+export async function addPhi(
   userId: string,
   amount: number,
-  type: "add" | "spend",
-  reason: string
+  reason = "add"
 ) {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
+
+  await supabase.rpc("increment_phi", {
+    x: amount,
+    uid: userId,
+  });
 
   await supabase.from("phi_transactions").insert({
     user_id: userId,
     amount,
-    type,
+    type: "add",
     reason,
   });
-}
-
-/**
- * Add PHI to a user's balance
- */
-export async function addPhi(
-  userId: string,
-  amount: number,
-  reason = "reward"
-) {
-  const supabase = supabaseServer();
-
-  // 1. Update balance
-  await supabase.rpc("increment_phi", { x: amount, uid: userId });
-
-  // 2. Log transaction
-  await logPhiTransaction(userId, amount, "add", reason);
 
   return { success: true };
 }
 
-/**
- * Spend PHI from a user's balance
- */
 export async function spendPhi(
   userId: string,
   amount: number,
   reason = "spend"
 ) {
-  const supabase = supabaseServer();
+  const supabase = await supabaseServer();
 
-  // Get current PHI
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("phi")
-    .eq("id", userId)
-    .single();
+  await supabase.rpc("increment_phi", {
+    x: -amount,
+    uid: userId,
+  });
 
-  const current = profile?.phi ?? 0;
-  if (current < amount) {
-    return { success: false, error: "Not enough PHI" };
-  }
-
-  // 1. Deduct PHI
-  await supabase.rpc("decrement_phi", { x: amount, uid: userId });
-
-  // 2. Log transaction
-  await logPhiTransaction(userId, amount, "spend", reason);
+  await supabase.from("phi_transactions").insert({
+    user_id: userId,
+    amount,
+    type: "spend",
+    reason,
+  });
 
   return { success: true };
 }

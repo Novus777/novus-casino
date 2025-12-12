@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
-import { addXP } from "@/app/lib/xp";  // <-- FIXED IMPORT
+import { addXp } from "@/app/lib/xp";
 
 export async function POST(req: Request) {
-  const { userId, amount } = await req.json();
+  try {
+    const { userId, amount } = await req.json();
 
-  if (!userId || !amount) {
-    return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    if (!userId || typeof amount !== "number") {
+      return NextResponse.json(
+        { error: "Invalid payload" },
+        { status: 400 }
+      );
+    }
+
+    await addXp(userId, amount);
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("XP API error:", err);
+    return NextResponse.json(
+      { error: "Failed to add XP" },
+      { status: 500 }
+    );
   }
-
-  const result = await addXP(userId, amount);   // <-- FIXED FUNCTION CALL
-  return NextResponse.json(result);
 }

@@ -1,42 +1,20 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { supabaseServer } from "@/app/lib/supabase-server";
 
-function getSupabase() {
-  const cookieStore = cookies();
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-}
-
-// Add new notification for current user
-export async function addNotification(message: string) {
-  const supabase = getSupabase();
+export async function notify(message: string) {
+  const supabase = await supabaseServer();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "Not logged in" };
+  if (!user) return;
 
-  const { error } = await supabase.from("notifications").insert({
+  await supabase.from("notifications").insert({
     user_id: user.id,
     message,
-    type: "info",
     seen: false,
+    type: "info",
   });
-
-  if (error) return { error };
-
-  return { success: true };
 }

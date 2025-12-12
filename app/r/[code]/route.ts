@@ -1,20 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseServer } from "@/app/lib/supabase-server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  context: { params: Promise<{ code: string }> }
 ) {
-  const code = params.code;
-  const url = new URL(request.url);
+  const { code } = await context.params;
 
-  const signupUrl = new URL("/auth/signup", url.origin);
-  signupUrl.searchParams.set("ref", code);
+  const supabase = await supabaseServer();
 
-  const res = NextResponse.redirect(signupUrl);
-  res.cookies.set("referral_code", code, {
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
+  // Example: look up referral / redirect
+  const { data } = await supabase
+    .from("referrals")
+    .select("user_id")
+    .eq("code", code)
+    .single();
 
-  return res;
+  if (!data) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  return NextResponse.redirect(
+    new URL(`/Signup?ref=${code}`, request.url)
+  );
 }

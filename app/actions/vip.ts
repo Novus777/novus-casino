@@ -1,15 +1,18 @@
-export function getVipName(xp: number): string {
-  if (xp >= 100000) return "Whale";
-  if (xp >= 25000) return "Diamond";
-  if (xp >= 10000) return "Gold";
-  if (xp >= 2500) return "Silver";
-  return "Starter";
+import { supabaseServer } from "@/app/lib/supabase-server";
+
+export function getVipName(level: number) {
+  if (level >= 100) return "Whale";
+  if (level >= 50) return "Elite";
+  if (level >= 10) return "Pro";
+  return "Rookie";
 }
 
-export function getVipLevel(xp: number): number {
-  if (xp >= 100000) return 5;
-  if (xp >= 25000) return 4;
-  if (xp >= 10000) return 3;
-  if (xp >= 2500) return 2;
-  return 1;
+export async function updateVipLevel(userId: string) {
+  const supabase = await supabaseServer();
+
+  const { error } = await supabase.rpc("update_vip_level", {
+    user_id: userId,
+  });
+
+  if (error) throw error;
 }

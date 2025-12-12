@@ -1,15 +1,12 @@
-import { supabaseServer } from "./supabase-server";
+import { getSupabaseServer } from "../server/supabase";
 
-export async function addXP(userId: string, amount: number) {
-  const supabase = supabaseServer();
+export async function addXp(userId: string, amount: number) {
+  const supabase = await getSupabaseServer();
 
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      xp: supabase.rpc("increment", { x: amount })
-    })
-    .eq("id", userId);
+  const { error } = await supabase.rpc("add_xp", {
+    user_id: userId,
+    amount,
+  });
 
-  if (error) return { error };
-  return { success: true };
+  if (error) throw error;
 }

@@ -1,24 +1,20 @@
-import { supabaseServer } from "./supabase-server";
+import { supabaseBrowser } from "./supabase-browser";
 
+export async function applyReferral(code: string, userId: string) {
+  const supabase = supabaseBrowser();
 
-export async function addReferral(userId: string, referredId: string) {
-  const supabase = supabaseServer();
+  const { data: referrer } = await supabase
+    .from("referral_codes")
+    .select("user_id")
+    .eq("code", code)
+    .single();
 
-  const { error } = await supabase.from("referrals").insert({
-    user_id: userId,
-    referred_id: referredId,
+  if (!referrer) return false;
+
+  await supabase.from("referrals").insert({
+    referrer_id: referrer.user_id,
+    referred_id: userId,
   });
 
-  return { success: !error };
-}
-
-export async function getReferralCount(userId: string) {
-  const supabase = supabaseServer();
-
-  const { count } = await supabase
-    .from("referrals")
-    .select("*", { count: "exact" })
-    .eq("user_id", userId);
-
-  return count || 0;
+  return true;
 }
