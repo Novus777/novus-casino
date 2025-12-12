@@ -1,34 +1,23 @@
-"use server";
+export function getXpProgress(xp: number) {
+  const tiers = [
+    { level: 1, name: "Starter", at: 0 },
+    { level: 2, name: "Silver", at: 2500 },
+    { level: 3, name: "Gold", at: 10000 },
+    { level: 4, name: "Diamond", at: 25000 },
+    { level: 5, name: "Whale", at: 100000 },
+  ];
 
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
+  const current =
+    [...tiers].reverse().find(t => xp >= t.at) ?? tiers[0];
 
-export async function awardXP(amount: number) {
-  const cookieStore = cookies();
+  const next =
+    tiers.find(t => t.level === current.level + 1) ?? null;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-      },
-    }
-  );
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) return { error: "Not authenticated" };
-
-  const { error } = await supabase.rpc("add_xp", {
-    user_id: user.id,
-    amount,
-  });
-
-  if (error) return { error: error.message };
-
-  return { success: true };
+  return {
+    current,
+    next,
+    percent: next
+      ? Math.min(100, Math.floor((xp / next.at) * 100))
+      : 100,
+  };
 }

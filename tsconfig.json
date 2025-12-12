@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "es2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -12,35 +16,46 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-
+    "jsx": "react-jsx",
     "baseUrl": ".",
-
     "paths": {
-      "@/*": ["app/*"],
-
-      "@/context/*": ["app/context/*"],
-      "@/app/context/*": ["app/context/*"],
-
-      "@/components/*": ["app/components/*"],
-      "@/components/shared/*": ["app/components/shared/*"],
-
-      "@/lib/*": ["app/lib/*"],
-      "@/app/lib/*": ["app/lib/*"]
+      "@/*": [
+        "app/*"
+      ],
+      "@/context/*": [
+        "app/context/*"
+      ],
+      "@/app/context/*": [
+        "app/context/*"
+      ],
+      "@/components/*": [
+        "app/components/*"
+      ],
+      "@/components/shared/*": [
+        "app/components/shared/*"
+      ],
+      "@/lib/*": [
+        "app/lib/*"
+      ],
+      "@/app/lib/*": [
+        "app/lib/*"
+      ]
     },
-
     "incremental": true,
     "plugins": [
-      { "name": "next" }
+      {
+        "name": "next"
+      }
     ]
   },
-
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
-
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

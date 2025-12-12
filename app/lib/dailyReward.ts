@@ -1,27 +1,26 @@
 import { supabaseServer } from "./supabase-server";
 
-export async function claimDailyReward(userId: string) {
+export async function addDailyReward(userId: string) {
   const supabase = supabaseServer();
 
-  // Load latest daily reward
+  // GET last reward
   const { data: last, error: lastErr } = await supabase
     .from("daily_rewards")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .single();
 
   if (lastErr && lastErr.code !== "PGRST116") {
-    return { error: lastErr };
+    return { error: lastErr.message };
   }
 
   const now = new Date();
   const lastDate = last ? new Date(last.created_at) : null;
 
+  // streak logic
   let streak = last?.streak ?? 0;
-
-  // If yesterday → continue streak
   const oneDay = 24 * 60 * 60 * 1000;
 
   if (lastDate && now.getTime() - lastDate.getTime() <= oneDay * 1.5) {
@@ -32,21 +31,25 @@ export async function claimDailyReward(userId: string) {
 
   const rewardAmount = 100 + streak * 10;
 
-  // Insert reward record
+  // insert new reward row
   await supabase.from("daily_rewards").insert({
     user_id: userId,
+    amount: rewardAmount,
     streak,
-    amount: rewardAmount
   });
 
-  // Update profile: add PHI + XP
+  // update profile XP + PHI
   await supabase
     .from("profiles")
     .update({
-      phi: rewardAmount,
-      xp: 50
+      phi: (last?.phi ?? 0) + rewardAmount,
+      xp: (last?.xp ?? 0) + 50,
     })
     .eq("id", userId);
 
-  return { success: true, reward: rewardAmount, streak };
+  return {
+    success: true,
+    reward: rewardAmount,
+    streak,
+  };
 }

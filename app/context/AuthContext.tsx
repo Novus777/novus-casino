@@ -4,7 +4,14 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/app/lib/supabase";
 import { getProfile } from "@/app/lib/profile";
 
-const AuthContext = createContext({
+type AuthContextValue = {
+  user: any;
+  profile: any;
+  loading: boolean;
+  refreshProfile: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue>({
   user: null,
   profile: null,
   loading: true,
@@ -65,8 +72,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// 🔥 These hooks now return ONLY the value you want:
+// 👉 New helper: full auth object
+export const useAuth = () => useContext(AuthContext);
 
+// Existing helpers
 export const useUser = () => {
   return useContext(AuthContext).user;
 };

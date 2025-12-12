@@ -1,34 +1,15 @@
-"use server";
+export function getVipName(xp: number): string {
+  if (xp >= 100000) return "Whale";
+  if (xp >= 25000) return "Diamond";
+  if (xp >= 10000) return "Gold";
+  if (xp >= 2500) return "Silver";
+  return "Starter";
+}
 
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
-
-export async function setVipLevel(level: number) {
-  const cookieStore = cookies();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get: (name: string) => cookieStore.get(name)?.value,
-      },
-    }
-  );
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) return { error: "Not authenticated" };
-
-  const { error } = await supabase.rpc("level_up_vip", {
-    user_id: user.id,
-    new_level: level,
-  });
-
-  if (error) return { error: error.message };
-
-  return { success: true };
+export function getVipLevel(xp: number): number {
+  if (xp >= 100000) return 5;
+  if (xp >= 25000) return 4;
+  if (xp >= 10000) return 3;
+  if (xp >= 2500) return 2;
+  return 1;
 }
