@@ -1,23 +1,25 @@
-import { supabase } from "./supabase";
+import { supabaseServer } from "./supabase-server";
 
-export async function getReferralStats(userId: string) {
-  const { data, error } = await supabase
-    .from("referrals")
-    .select("id, reward_given, referred_id")
-    .eq("referrer_id", userId);
+export async function applyReferral(userId: string, code: string) {
+  const supabase = supabaseServer();
 
-  if (error) {
-    console.error("Referral stats error:", error);
-    return { totalInvited: 0, totalPhiEarned: 0, activePlayers: 0 };
-  }
+  const { data: referrer } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("referral_code", code)
+    .single();
 
-  return {
-    totalInvited: data.length,
-    totalPhiEarned: data.reduce((sum, r) => sum + (r.reward_given || 0), 0),
-    activePlayers: data.filter(r => r.referred_id !== null).length,
-  };
-}
+  if (!referrer) return;
 
-export function getReferralLink(code: string) {
-  return `${process.env.NEXT_PUBLIC_BASE_URL}/signup?ref=${code}`;
+  await supabase.from("referrals").insert({
+    referrer_id: referrer.id,
+    referred_id: userId,
+  });
+
+  await supabase
+    .from("profiles")
+    .update({
+      phi: supabase.rpc("increment", { x: 50 }),
+    })
+    .eq("id", referrer.id);
 }

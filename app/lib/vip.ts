@@ -1,41 +1,56 @@
+import { supabaseServer } from "./supabase-server";
+
 export function getVipName(level: number) {
-  switch (level) {
-    case 1:
-      return "Starter";
-    case 2:
-      return "Bronze";
-    case 3:
-      return "Silver";
-    case 4:
-      return "Gold";
-    case 5:
-      return "Platinum";
-    case 6:
-      return "Diamond";
-    case 7:
-      return "Whale";
-    default:
-      return "Starter";
-  }
+  const names = [
+    "Starter",
+    "Bronze",
+    "Silver",
+    "Gold",
+    "Platinum",
+    "Diamond",
+    "Whale",
+  ];
+  return names[level - 1] ?? "Starter";
 }
 
 export function getVipGradient(level: number) {
-  switch (level) {
-    case 1:
-      return "from-gray-400 to-gray-600";
-    case 2:
-      return "from-orange-400 to-orange-600";
-    case 3:
-      return "from-slate-300 to-slate-500";
-    case 4:
-      return "from-yellow-400 to-yellow-600";
-    case 5:
-      return "from-purple-400 to-purple-600";
-    case 6:
-      return "from-cyan-400 to-blue-500";
-    case 7:
-      return "from-pink-500 to-red-600";
-    default:
-      return "from-gray-400 to-gray-600";
+  const gradients = [
+    "from-gray-400 to-gray-600",
+    "from-orange-400 to-orange-600",
+    "from-slate-300 to-slate-500",
+    "from-yellow-400 to-yellow-600",
+    "from-purple-400 to-purple-600",
+    "from-cyan-400 to-blue-500",
+    "from-pink-500 to-red-600",
+  ];
+  return gradients[level - 1] ?? gradients[0];
+}
+
+export async function updateVipLevel(userId: string) {
+  const supabase = supabaseServer();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("xp, vip_level")
+    .eq("id", userId)
+    .single();
+
+  if (!profile) return;
+
+  const thresholds = [0, 100, 500, 1500, 3000, 6000, 10000];
+  let newLevel = profile.vip_level;
+
+  for (let i = thresholds.length - 1; i >= 0; i--) {
+    if (profile.xp >= thresholds[i]) {
+      newLevel = i + 1;
+      break;
+    }
+  }
+
+  if (newLevel !== profile.vip_level) {
+    await supabase
+      .from("profiles")
+      .update({ vip_level: newLevel })
+      .eq("id", userId);
   }
 }
