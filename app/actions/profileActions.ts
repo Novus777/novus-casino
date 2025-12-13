@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseServer } from "@/app/lib/supabase-server";
+import { supabaseServer } from "@/lib/supabase-server";
 
 export async function getProfile() {
   const supabase = await supabaseServer();

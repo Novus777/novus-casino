@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/app/lib/supabase-server";
+import { supabaseServer } from "@/lib/supabase-server";
 
 export function getVipName(level: number) {
   if (level >= 100) return "Whale";

@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { supabaseServer } from "@/app/lib/supabase-server";
+import { supabaseServer } from "@/lib/supabase-server";
 
 type Leader = {
   id: string;
@@ -10,7 +10,7 @@ type Leader = {
 };
 
 export default async function LeaderboardPage() {
-  const supabase = await supabaseServer();
+  const supabase = supabaseServer(); // ✅ FIXED (no await)
 
   const {
     data: { user },
@@ -18,27 +18,25 @@ export default async function LeaderboardPage() {
 
   if (!user) redirect("/auth/login");
 
-  const { data, error } = await supabase
+  const { data: leaders, error } = await supabase
     .from("profiles")
     .select("id, username, phi")
     .order("phi", { ascending: false })
     .limit(10);
 
   if (error) {
-    console.error("Leaderboard fetch error:", error);
+    console.error("Leaderboard error:", error);
   }
 
-  const leaders: Leader[] = data ?? [];
+  const list: Leader[] = leaders ?? [];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-10 text-white">
+    <div className="space-y-8 max-w-5xl text-white">
       {/* HEADER */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#07070c] p-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-700/30 via-cyan-600/10 to-transparent blur-2xl" />
+      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#07070c] p-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-700/25 via-cyan-600/10 to-transparent blur-2xl" />
         <div className="relative">
-          <h1 className="text-4xl font-bold tracking-tight">
-            Leaderboard
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Leaderboard</h1>
           <p className="mt-2 text-white/50">
             Top PHI holders across PHI Casino.
           </p>
@@ -46,15 +44,15 @@ export default async function LeaderboardPage() {
       </div>
 
       {/* PODIUM */}
-      {leaders.length >= 3 && (
+      {list.length >= 3 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Podium rank="2nd" user={leaders[1]} glow="cyan" />
-          <Podium rank="1st" user={leaders[0]} glow="purple" crown />
-          <Podium rank="3rd" user={leaders[2]} glow="emerald" />
+          <Podium place="2nd" user={list[1]} glow="cyan" />
+          <Podium place="1st" user={list[0]} glow="purple" crown />
+          <Podium place="3rd" user={list[2]} glow="emerald" />
         </div>
       )}
 
-      {/* TABLE */}
+      {/* LIST */}
       <div className="rounded-2xl border border-white/10 bg-[#07070c] overflow-hidden">
         <div className="grid grid-cols-12 px-6 py-3 text-xs text-white/40 border-b border-white/10">
           <div className="col-span-2">Rank</div>
@@ -62,17 +60,18 @@ export default async function LeaderboardPage() {
           <div className="col-span-4 text-right">PHI</div>
         </div>
 
-        {leaders.slice(3).map((u, i) => (
-          <Row
-            key={u.id}
-            rank={i + 4}
-            username={u.username}
-            phi={u.phi}
-          />
-        ))}
+        {list.length > 3 &&
+          list.slice(3).map((u, index) => (
+            <Row
+              key={u.id}
+              rank={index + 4}
+              username={u.username}
+              phi={u.phi}
+            />
+          ))}
 
-        {leaders.length === 0 && (
-          <div className="px-6 py-10 text-center text-white/40">
+        {list.length === 0 && (
+          <div className="px-6 py-8 text-white/40 text-sm">
             No leaderboard data yet.
           </div>
         )}
@@ -84,20 +83,20 @@ export default async function LeaderboardPage() {
 /* ---------------- COMPONENTS ---------------- */
 
 function Podium({
-  rank,
+  place,
   user,
   glow,
   crown = false,
 }: {
-  rank: string;
+  place: string;
   user: Leader;
   glow: "purple" | "cyan" | "emerald";
   crown?: boolean;
 }) {
-  const glowMap = {
-    purple: "shadow-[0_0_45px_rgba(124,58,237,0.6)]",
-    cyan: "shadow-[0_0_45px_rgba(34,211,238,0.5)]",
-    emerald: "shadow-[0_0_45px_rgba(52,211,153,0.5)]",
+  const glowMap: Record<string, string> = {
+    purple: "shadow-[0_0_40px_rgba(124,58,237,0.55)]",
+    cyan: "shadow-[0_0_40px_rgba(34,211,238,0.45)]",
+    emerald: "shadow-[0_0_40px_rgba(52,211,153,0.45)]",
   };
 
   return (
@@ -105,11 +104,11 @@ function Podium({
       className={`relative rounded-3xl border border-white/10 bg-[#07070c] p-6 text-center ${glowMap[glow]}`}
     >
       {crown && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 text-2xl">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-xl">
           👑
         </div>
       )}
-      <div className="text-sm text-white/40">{rank}</div>
+      <div className="text-sm text-white/40">{place}</div>
       <div className="mt-2 text-xl font-bold">
         {user.username ?? "Anonymous"}
       </div>

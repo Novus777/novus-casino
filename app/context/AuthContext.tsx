@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const supabase = supabaseBrowser();
+const supabase = supabaseBrowser;
 
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);

@@ -1,24 +1,20 @@
 "use server";
 
 import { supabaseServer } from "@/app/lib/supabase-server";
-import { updateVipLevel } from "@/app/lib/vip";
 
-export async function claimDailyReward(userId: string) {
+export async function dailyReward() {
   const supabase = await supabaseServer();
 
-  const { data: user } = await supabase
-    .from("users")
-    .select("xp, vip_level")
-    .eq("id", userId)
-    .single();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const newXp = (user?.xp || 0) + 10;
-  const newVip = updateVipLevel(newXp, user?.vip_level || 0);
+  if (!user) return { error: "Not logged in" };
 
   await supabase
-    .from("users")
-    .update({ xp: newXp, vip_level: newVip })
-    .eq("id", userId);
+    .from("profiles")
+    .update({ phi: 100 })
+    .eq("id", user.id);
 
-  return { xp: newXp, vip: newVip };
+  return { success: true };
 }

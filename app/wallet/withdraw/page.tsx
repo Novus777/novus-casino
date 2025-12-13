@@ -1,39 +1,21 @@
-"use client";
+import { redirect } from "next/navigation";
+import { supabaseServer } from "@/app/lib/supabase-server";
 
-import { useState } from "react";
+export default async function WithdrawPage() {
+  const supabase = await supabaseServer();
 
-export default function WithdrawPage() {
-  const [address, setAddress] = useState("");
-  const [amount, setAmount] = useState("");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/auth/login");
 
   return (
-    <div className="max-w-xl mx-auto py-10 text-white space-y-6">
-      <h1 className="text-3xl font-bold">Withdraw</h1>
+    <div className="max-w-xl mx-auto space-y-6 text-white">
+      <h1 className="text-2xl font-bold">Withdraw PHI</h1>
 
-      <div className="bg-[#111]/80 border border-[#1f1f1f] p-6 rounded-xl space-y-4">
-        <div>
-          <label className="font-semibold">Withdraw Address</label>
-          <input
-            className="w-full mt-2 p-3 bg-black/40 border border-gray-700 rounded-lg"
-            placeholder="Enter address..."
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="font-semibold">Amount</label>
-          <input
-            className="w-full mt-2 p-3 bg-black/40 border border-gray-700 rounded-lg"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-        </div>
-
-        <button className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold mt-4">
-          Submit Withdraw Request
-        </button>
+      <div className="rounded-2xl border border-white/10 bg-[#07070c] p-6 text-white/50">
+        Withdrawals coming soon.
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/app/lib/supabase-server";
+import { supabaseServer } from "@/lib/supabase-server";
 import { updateVipLevel } from "@/app/lib/vip";
 
 export async function claimDailyReward(userId: string) {

@@ -1,154 +1,87 @@
-"use client";
+import { redirect } from "next/navigation";
+import { supabaseServer } from "@/lib/supabase-server";
 
-import React, { useEffect, useState } from "react";
-import GlassCard from "@/components/shared/GlassCard";
-import OGBadge from "@/components/shared/OGBadge";
+type ActivityItem = {
+  id: string;
+  type: string;
+  amount: number | null;
+  status: string | null;
+  created_at: string;
+};
 
-export default function ActivityFeed() {
-  const [filter, setFilter] = useState("all");
+export default async function ActivityPage() {
+  const supabase = await supabaseServer();
 
-  const [events, setEvents] = useState([
-    {
-      user: "7K Panda",
-      game: "Crash",
-      amount: "+$240",
-      vip: "Gold",
-      og: true,
-      time: "10s ago",
-    },
-    {
-      user: "SolSharp",
-      game: "Plinko",
-      amount: "-$25",
-      vip: "Silver",
-      og: false,
-      time: "25s ago",
-    },
-    {
-      user: "CryptoLion",
-      game: "Coinflip",
-      amount: "+$120",
-      vip: "Diamond",
-      og: true,
-      time: "1m ago",
-    },
-    {
-      user: "Phantom",
-      game: "Limbo",
-      amount: "+$42",
-      vip: "Bronze",
-      og: false,
-      time: "2m ago",
-    },
-  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // AUTO ADD RANDOM EVENTS EVERY FEW SECONDS
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const users = ["SolKing", "Nebula", "Void", "Pluto", "Luna", "Whale", "Blade"];
-      const games = ["Crash", "Limbo", "Plinko", "Coinflip", "Roulette"];
-      const win = Math.random() > 0.4;
+  if (!user) redirect("/auth/login");
 
-      const newEvent = {
-        user: users[Math.floor(Math.random() * users.length)],
-        game: games[Math.floor(Math.random() * games.length)],
-        amount: win
-          ? `+$${Math.floor(Math.random() * 300 + 20)}`
-          : `-$${Math.floor(Math.random() * 50 + 5)}`,
-        vip: ["Bronze", "Silver", "Gold", "Platinum"][Math.floor(Math.random() * 4)],
-        og: Math.random() > 0.8,
-        time: "just now",
-      };
+  const { data: rows } = await supabase
+    .from("wallet_transactions")
+    .select("id, type, amount, status, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
 
-      setEvents((prev) => [newEvent, ...prev.slice(0, 25)]);
-    }, 3500);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const filteredEvents = events.filter((e) => {
-    if (filter === "bigWins")
-      return e.amount.startsWith("+$") && parseInt(e.amount.slice(2)) >= 150;
-
-    if (filter === "highRollers")
-      return ["Gold", "Platinum", "Diamond"].includes(e.vip);
-
-    return true;
-  });
+  const activity: ActivityItem[] = rows ?? [];
 
   return (
-    <div className="px-6 py-16 flex justify-center">
-      <section className="max-w-5xl w-full space-y-16">
-        {/* HEADER */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-300 via-fuchsia-300 to-cyan-300 text-transparent bg-clip-text">
-            Live Activity Feed
-          </h1>
-          <p className="text-white/60 text-sm max-w-xl">
-            Track live bets, big wins, and high roller action across NOVUS Casino.
-          </p>
+    <div className="p-8 text-white space-y-6">
+      <h1 className="text-3xl font-bold">Activity</h1>
+      <p className="text-sm text-zinc-400">
+        Recent wallet activity
+      </p>
+
+      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+        {activity.length === 0 && (
+          <div className="p-6 text-zinc-500">
+            No activity yet
+          </div>
+        )}
+
+        {activity.map((item) => (
+          <ActivityRow key={item.id} item={item} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- ROW ---------------- */
+
+function ActivityRow({ item }: { item: ActivityItem }) {
+  const positive = item.type !== "withdraw";
+
+  return (
+    <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 hover:bg-zinc-900 transition">
+      <div>
+        <div className="capitalize font-medium">
+          {item.type}
         </div>
-
-        {/* FILTERS */}
-        <div className="flex flex-wrap gap-4">
-          {[
-            { id: "all", label: "All Activity" },
-            { id: "bigWins", label: "Big Wins" },
-            { id: "highRollers", label: "High Rollers" },
-          ].map((btn) => (
-            <button
-              key={btn.id}
-              onClick={() => setFilter(btn.id)}
-              className={`px-5 py-2 rounded-full text-sm transition ${
-                filter === btn.id
-                  ? "bg-gradient-to-r from-purple-500 via-fuchsia-400 to-cyan-300 text-black shadow-[0_0_18px_rgba(168,85,247,0.6)]"
-                  : "bg-white/10 border border-white/10 text-white hover:bg-white/15"
-              }`}
-            >
-              {btn.label}
-            </button>
-          ))}
+        <div className="text-xs text-zinc-500">
+          {new Date(item.created_at).toLocaleString()}
         </div>
+      </div>
 
-        {/* FEED */}
-        <GlassCard className="p-6 rounded-3xl bg-white/5 border-white/10 space-y-4 max-h-[600px] overflow-y-auto">
-          {filteredEvents.map((e, i) => (
-            <GlassCard
-              key={i}
-              className="px-5 py-4 rounded-2xl bg-white/10 border-white/10 flex items-center justify-between hover:bg-white/15 transition"
-            >
-              {/* LEFT SIDE */}
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-cyan-300 flex items-center justify-center text-black font-bold shadow-[0_0_12px_rgba(168,85,247,0.8)]">
-                  {e.user.charAt(0)}
-                </div>
-
-                <div>
-                  <p className="flex items-center gap-2 text-white font-semibold">
-                    {e.user}
-                    {e.og && <OGBadge size="sm" />}
-                  </p>
-                  <p className="text-xs text-white/40">
-                    Played {e.game} • {e.vip} VIP
-                  </p>
-                </div>
-              </div>
-
-              {/* RIGHT SIDE */}
-              <div className="flex flex-col items-end">
-                <p
-                  className={`text-lg font-bold ${
-                    e.amount.startsWith("+") ? "text-emerald-300" : "text-fuchsia-300"
-                  }`}
-                >
-                  {e.amount}
-                </p>
-                <p className="text-xs text-white/40">{e.time}</p>
-              </div>
-            </GlassCard>
-          ))}
-        </GlassCard>
-      </section>
+      <div className="text-right">
+        {item.amount !== null && (
+          <div
+            className={`font-semibold ${
+              positive ? "text-emerald-400" : "text-red-400"
+            }`}
+          >
+            {positive ? "+" : "-"}
+            {item.amount} PHI
+          </div>
+        )}
+        {item.status && (
+          <div className="text-xs text-zinc-500">
+            {item.status}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
