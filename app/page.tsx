@@ -10,11 +10,11 @@ export default function HomePage() {
         </h1>
 
         <p className="mt-6 text-lg text-white/70 max-w-2xl mx-auto">
-          NOVUS is a next-generation casino platform powered by PHI Coin,
+          PHI Casino is a next-generation platform powered by PHI Coin,
           transparent rewards, real ownership, and community-driven growth.
         </p>
 
-        <div className="mt-10 flex justify-center gap-4">
+        <div className="mt-10 flex justify-center gap-4 flex-wrap">
           <Link
             href="/auth/signup"
             className="px-8 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition"
@@ -23,10 +23,10 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/dashboard"
+            href="/auth/login"
             className="px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition"
           >
-            View Dashboard
+            Login
           </Link>
         </div>
       </section>
@@ -36,7 +36,7 @@ export default function HomePage() {
         <div>
           <h2 className="text-3xl font-bold">What is PHI Coin?</h2>
           <p className="mt-4 text-white/70">
-            PHI Coin is the internal currency of NOVUS. It powers rewards,
+            PHI Coin is the internal currency of PHI Casino. It powers rewards,
             VIP levels, daily streaks, and future crypto casino gameplay.
           </p>
 
@@ -48,7 +48,7 @@ export default function HomePage() {
         </div>
 
         <div className="bg-[#0b0b0b] border border-[#1f1f1f] rounded-2xl p-8">
-          <p className="text-white/60 text-sm">Pre-launch bonuses</p>
+          <p className="text-white/60 text-sm">Pre-launch bonus</p>
           <p className="text-2xl font-bold mt-2">🎁 100 PHI on signup</p>
           <p className="text-white/60 mt-2">
             + daily rewards & VIP progression
@@ -118,12 +118,21 @@ export default function HomePage() {
           Create an account now and start earning PHI.
         </p>
 
-        <Link
-          href="/auth/signup"
-          className="inline-block mt-8 px-10 py-4 rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition"
-        >
-          Join NOVUS
-        </Link>
+        <div className="mt-8 flex justify-center gap-4">
+          <Link
+            href="/auth/signup"
+            className="px-10 py-4 rounded-xl bg-purple-600 hover:bg-purple-700 font-semibold transition"
+          >
+            Sign Up
+          </Link>
+
+          <Link
+            href="/auth/login"
+            className="px-10 py-4 rounded-xl bg-white/10 hover:bg-white/20 font-semibold transition"
+          >
+            Login
+          </Link>
+        </div>
       </section>
     </main>
   );
