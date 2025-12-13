@@ -19,7 +19,8 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-const supabase = supabaseBrowser;
+  // ✅ FIX: use the instance directly
+  const supabase = supabaseBrowser;
 
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -28,12 +29,11 @@ const supabase = supabaseBrowser;
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
+    const load = async () => {
       const { data } = await supabase.auth.getSession();
-      const authedUser = data.session?.user ?? null;
-
       if (!mounted) return;
 
+      const authedUser = data.session?.user ?? null;
       setUser(authedUser);
 
       if (authedUser) {
@@ -45,29 +45,29 @@ const supabase = supabaseBrowser;
       }
 
       setLoading(false);
-    }
+    };
 
     load();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        const authedUser = session?.user ?? null;
-        setUser(authedUser);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const authedUser = session?.user ?? null;
+      setUser(authedUser);
 
-        if (authedUser) {
-          const userProfile = await getProfile(authedUser.id);
-          setProfile(userProfile);
-        } else {
-          setProfile(null);
-        }
+      if (authedUser) {
+        const userProfile = await getProfile(authedUser.id);
+        setProfile(userProfile);
+      } else {
+        setProfile(null);
       }
-    );
+    });
 
     return () => {
       mounted = false;
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, []);
 
   const refreshProfile = async () => {
     if (!user) return;
@@ -85,4 +85,5 @@ const supabase = supabaseBrowser;
 export const useAuth = () => useContext(AuthContext);
 export const useUser = () => useContext(AuthContext).user;
 export const useProfile = () => useContext(AuthContext).profile;
-export const useRefreshProfile = () => useContext(AuthContext).refreshProfile;
+export const useRefreshProfile = () =>
+  useContext(AuthContext).refreshProfile;
