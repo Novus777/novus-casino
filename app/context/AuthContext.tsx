@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "@/app/lib/supabase";
+import { supabaseBrowser } from "@/app/lib/supabase-browser";
 import { getProfile } from "@/app/lib/profile";
 
 type AuthContextValue = {
@@ -19,13 +19,13 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const supabase = supabaseBrowser;
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load session + profile
   useEffect(() => {
-    async function load() {
+    const load = async () => {
       const { data } = await supabase.auth.getSession();
       const authedUser = data.session?.user ?? null;
 
@@ -37,11 +37,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setLoading(false);
-    }
+    };
 
     load();
 
-    // Listen for auth changes
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         const authedUser = session?.user ?? null;
@@ -57,7 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => listener.subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   const refreshProfile = async () => {
     if (!user) return;
@@ -72,18 +71,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// 👉 New helper: full auth object
 export const useAuth = () => useContext(AuthContext);
-
-// Existing helpers
-export const useUser = () => {
-  return useContext(AuthContext).user;
-};
-
-export const useProfile = () => {
-  return useContext(AuthContext).profile;
-};
-
-export const useRefreshProfile = () => {
-  return useContext(AuthContext).refreshProfile;
-};
+export const useUser = () => useContext(AuthContext).user;
+export const useProfile = () => useContext(AuthContext).profile;
+export const useRefreshProfile = () => useContext(AuthContext).refreshProfile;

@@ -1,11 +1,15 @@
 import "./globals.css";
-import { ProfileProvider } from "./context/ProfileContext";
+import { AuthProvider } from "@/app/context/AuthContext";
 
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
-        <ProfileProvider>{children}</ProfileProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

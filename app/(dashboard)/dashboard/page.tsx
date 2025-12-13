@@ -1,33 +1,21 @@
-"use client";
+import { redirect } from "next/navigation";
+import { supabaseServer } from "@/app/lib/supabase-server";
 
-import { useEffect, useState } from "react";
-import { supabaseBrowser } from "@/app/lib/supabase-browser";
-import { useRouter } from "next/navigation";
+export default async function DashboardPage() {
+  const supabase = await supabaseServer();
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState<string | null>(null);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  useEffect(() => {
-    supabaseBrowser.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace("/auth/login");
-      } else {
-        setEmail(data.session.user.email ?? null);
-        setLoading(false);
-      }
-    });
-  }, [router]);
-
-  if (loading) {
-    return <div className="text-white p-6">Loading session…</div>;
+  if (!user) {
+    redirect("/auth/login");
   }
 
   return (
-    <div className="text-white p-6">
-      <h1 className="text-2xl font-bold">Dashboard Loaded ✅</h1>
-      <p className="mt-2 text-white/70">Logged in as: {email}</p>
+    <div className="text-white">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+      <p>Welcome back, {user.email}</p>
     </div>
   );
 }
