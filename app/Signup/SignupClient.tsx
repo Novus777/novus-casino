@@ -8,7 +8,8 @@ import { useEffect } from "react";
 export default function SignupClient() {
   const params = useSearchParams();
   const ref = params.get("ref");
-  const supabase = supabaseBrowser();
+  const supabase = supabaseBrowser;
+
 
   useEffect(() => {
     if (!ref) return;

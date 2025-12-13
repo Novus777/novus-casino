@@ -2,7 +2,8 @@ import { supabaseBrowser } from "./supabase-browser";
 import { addPhiCoins } from "./phiCoin";
 
 export async function checkOgWeeklyReward(userId: string) {
-  const supabase = supabaseBrowser();
+  const supabase = supabaseBrowser;
+
 
   const { data: profile } = await supabase
     .from("profiles")

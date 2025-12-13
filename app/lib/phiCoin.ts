@@ -1,7 +1,8 @@
 import { supabaseBrowser } from "./supabase-browser";
 
 export async function addPhiCoins(userId: string, amount: number) {
-  const supabase = supabaseBrowser();
+  const supabase = supabaseBrowser;
+
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -20,7 +21,8 @@ export async function addPhiCoins(userId: string, amount: number) {
 }
 
 export async function subtractPhiCoins(userId: string, amount: number) {
-  const supabase = supabaseBrowser();
+  const supabase = supabaseBrowser;
+
 
   const { data: profile } = await supabase
     .from("profiles")

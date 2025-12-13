@@ -1,7 +1,8 @@
 import { supabaseBrowser } from "./supabase-browser";
 
 export async function applyReferral(code: string, userId: string) {
-  const supabase = supabaseBrowser();
+  const supabase = supabaseBrowser;
+
 
   const { data: referrer } = await supabase
     .from("referral_codes")
