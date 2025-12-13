@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/app/context/AuthContext";
-import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DashboardLayout({
   children,
@@ -18,13 +18,20 @@ export default function DashboardLayout({
     }
   }, [loading, user, router]);
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
-        Loading…
+        Loading dashboard…
       </div>
     );
   }
 
-  return <div className="flex">{children}</div>;
+  if (!user) return null;
+
+  return (
+    <div className="flex min-h-screen">
+      {/* sidebar later */}
+      <main className="flex-1">{children}</main>
+    </div>
+  );
 }

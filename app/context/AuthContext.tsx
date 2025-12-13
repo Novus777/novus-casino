@@ -18,26 +18,34 @@ const AuthContext = createContext<AuthContextValue>({
   refreshProfile: async () => {},
 });
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const supabase = supabaseBrowser;
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const supabase = supabaseBrowser();
+
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+
+    async function load() {
       const { data } = await supabase.auth.getSession();
       const authedUser = data.session?.user ?? null;
+
+      if (!mounted) return;
 
       setUser(authedUser);
 
       if (authedUser) {
         const userProfile = await getProfile(authedUser.id);
+        if (!mounted) return;
         setProfile(userProfile);
+      } else {
+        setProfile(null);
       }
 
       setLoading(false);
-    };
+    }
 
     load();
 
@@ -55,7 +63,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    return () => listener.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, [supabase]);
 
   const refreshProfile = async () => {
@@ -69,7 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => useContext(AuthContext);
 export const useUser = () => useContext(AuthContext).user;

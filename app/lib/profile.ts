@@ -3,7 +3,9 @@
 import { supabaseBrowser } from "@/app/lib/supabase-browser";
 
 export async function getProfile(userId: string) {
-  const { data, error } = await supabaseBrowser
+  const supabase = supabaseBrowser();
+
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)

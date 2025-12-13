@@ -1,12 +1,32 @@
 "use client";
 
-import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
-export default function Protected({ children }: { children: React.ReactNode }) {
+export default function Protected({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { user, loading } = useAuth();
+  const router = useRouter();
 
-  if (loading) return <p className="text-white">Loading...</p>;
-  if (!user) return null; // middleware handles redirect
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth/login");
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   return <>{children}</>;
 }
