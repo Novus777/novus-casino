@@ -5,6 +5,7 @@ import { supabaseBrowser } from "@/app/lib/supabase-browser";
 
 export default function LoginPage() {
   const supabase = supabaseBrowser;
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,14 +21,13 @@ export default function LoginPage() {
       password,
     });
 
-    setLoading(false);
-
     if (error) {
       setError(error.message);
+      setLoading(false);
       return;
     }
 
-    // ✅ ONLY redirect that works reliably
+    // ✅ Redirect immediately
     window.location.href = "/dashboard";
   };
 
@@ -52,10 +52,7 @@ export default function LoginPage() {
 
         {error && <p className="text-red-500">{error}</p>}
 
-        <button
-          disabled={loading}
-          className="w-full bg-purple-600 p-3 rounded"
-        >
+        <button disabled={loading} className="w-full bg-purple-600 p-3 rounded">
           {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
